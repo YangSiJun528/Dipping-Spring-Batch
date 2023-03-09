@@ -1,4 +1,4 @@
-package com.example.dipping_spring_batch;
+package com.example.dipping_spring_batch.guide;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

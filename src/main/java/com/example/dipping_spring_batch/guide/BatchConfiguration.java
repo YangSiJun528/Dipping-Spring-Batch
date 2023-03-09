@@ -1,4 +1,4 @@
-package com.example.dipping_spring_batch;
+package com.example.dipping_spring_batch.guide;
 
 import javax.sql.DataSource;
 
