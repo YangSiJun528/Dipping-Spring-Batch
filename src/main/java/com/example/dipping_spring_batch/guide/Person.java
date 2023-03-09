@@ -1,3 +1,4 @@
+/*
 package com.example.dipping_spring_batch.guide;
 
 public class Person {
@@ -35,3 +36,4 @@ public class Person {
     }
 
 }
+*/

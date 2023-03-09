@@ -1,3 +1,4 @@
+/*
 package com.example.dipping_spring_batch.guide;
 
 import org.slf4j.Logger;
@@ -21,4 +22,4 @@ public class PersonItemProcessor implements ItemProcessor<Person, Person> {
         return transformedPerson;
     }
 
-}
+}*/

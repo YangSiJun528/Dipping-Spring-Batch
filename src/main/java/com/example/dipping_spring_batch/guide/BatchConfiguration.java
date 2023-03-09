@@ -1,3 +1,4 @@
+/*
 package com.example.dipping_spring_batch.guide;
 
 import javax.sql.DataSource;
@@ -74,4 +75,4 @@ public class BatchConfiguration {
                 .build();
     }
     // end::jobstep[]
-}
+}*/

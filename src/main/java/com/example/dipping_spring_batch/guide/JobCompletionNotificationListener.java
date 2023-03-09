@@ -1,3 +1,4 @@
+/*
 package com.example.dipping_spring_batch.guide;
 
 import org.slf4j.Logger;
@@ -33,4 +34,4 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
             ).forEach(person -> log.info("Found <{{}}> in the database.", person));
         }
     }
-}
+}*/
