@@ -1,7 +1,7 @@
-INSERT INTO `user`( first_name, last_name ) VALUES ( "first", "one" );
-INSERT INTO `user`( first_name, last_name ) VALUES ( "first", "one" );
-INSERT INTO `user`( first_name, last_name ) VALUES ( "first", "one" );
-INSERT INTO `user`( first_name, last_name ) VALUES ( "first", "one" );
+INSERT INTO `user`( user_name ) VALUES ( 'first' );
+INSERT INTO `user`( user_name ) VALUES ( 'second' );
+INSERT INTO `user`( user_name ) VALUES ( 'third' );
+INSERT INTO `user`( user_name ) VALUES ( 'fourth' );
 
 INSERT INTO `score`( user_id, score_value ) VALUES ( 1, 123.123 );
 INSERT INTO `score`( user_id, score_value ) VALUES ( 1, 23.123 );
