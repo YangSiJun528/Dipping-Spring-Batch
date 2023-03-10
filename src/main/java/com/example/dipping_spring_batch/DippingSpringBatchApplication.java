@@ -10,8 +10,8 @@ public class DippingSpringBatchApplication {
 
     public static void main(String[] args) {
 
-        //SpringApplication.run(DippingSpringBatchApplication.class, args);
-        System.exit(SpringApplication.exit(SpringApplication.run(DippingSpringBatchApplication.class, args)));
+        SpringApplication.run(DippingSpringBatchApplication.class, args);
+
     }
 
 }
