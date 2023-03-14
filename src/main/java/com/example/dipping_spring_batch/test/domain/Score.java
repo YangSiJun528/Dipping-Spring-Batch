@@ -18,7 +18,7 @@ public class Score {
     Long id;
 
     @Column(name = "score_value", nullable = false)
-    String value;
+    Long value;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)

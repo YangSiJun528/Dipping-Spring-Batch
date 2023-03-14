@@ -2,7 +2,9 @@ DROP TABLE `user` IF EXISTS;
 
 CREATE TABLE `user`  (
      user_id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-     user_name VARCHAR(20) NOT NULL
+     user_rank BIGINT NULL UNIQUE,
+     user_name VARCHAR(20) NOT NULL,
+     user_passed BOOLEAN NOT NULL DEFAULT false
 );
 
 DROP TABLE `score` IF EXISTS;
