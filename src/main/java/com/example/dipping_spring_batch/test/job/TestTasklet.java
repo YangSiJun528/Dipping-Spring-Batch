@@ -11,16 +11,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TestTasklet implements Tasklet {
 
-    private Long limit;
-
-    public TestTasklet (Long limit) {
-        this.limit = limit;
-    }
-
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        log.warn("This is form TestTasklet, limit = { " + limit + " }");
+        log.warn("This is form TestTasklet");
         return RepeatStatus.FINISHED;
     }
 }

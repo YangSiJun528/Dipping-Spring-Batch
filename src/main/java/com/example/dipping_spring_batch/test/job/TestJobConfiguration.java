@@ -1,29 +1,15 @@
 package com.example.dipping_spring_batch.test.job;
 
 import com.example.dipping_spring_batch.test.domain.User;
-import jakarta.persistence.EntityManagerFactory;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.configuration.support.DefaultBatchConfiguration;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.core.step.builder.TaskletStepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaPagingItemReader;
-import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -42,24 +28,28 @@ public class TestJobConfiguration extends DefaultBatchConfiguration {
     private PriorityQueue<User> sortedUserRank = new PriorityQueue<>(Comparator.comparing(User::getAverageScore));
 
     @Bean
-    public Step testStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, @Value("#{jobParameters[limit]}")Long limit) {
-        log.warn("This is form testStep");
-        return new StepBuilder("testJob", jobRepository)
-                .tasklet((contribution, chunkContext) -> {
-                    log.warn(">>>>> This is Step1");
-                    return RepeatStatus.FINISHED;
-                })
+    public Job testJob(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, JobExecutionListener listener) {
+        log.warn("This is form testJob");
+        return new JobBuilder("testJob", jobRepository)
+                .listener(listener)
+                .flow(step1(jobRepository, platformTransactionManager))
+                .end()
+                .build();
+    }
+
+    // Tasklet나 Writer 같이 Step의 구성요소가 Config 안에 선언되지 않은 경우 인자로 들어간다.
+    @Bean
+    public Step step1(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
+        log.warn("This is form step1");
+        return new StepBuilder("step1", jobRepository)
+                .tasklet(testTasklet(), platformTransactionManager)
                 .build();
     }
 
     @Bean
-    public Job testJob(JobRepository jobRepository, JobExecutionListener listener, Step testStep) {
-        log.warn("This is form testJob");
-        return new JobBuilder("testJob", jobRepository)
-                .listener(listener)
-                .flow(testStep)
-                .end()
-                .build();
+    public Tasklet testTasklet() {
+        log.warn("This is form TestTasklet");
+        return new TestTasklet();
     }
 
 }
