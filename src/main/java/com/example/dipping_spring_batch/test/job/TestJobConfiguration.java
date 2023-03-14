@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -14,16 +15,20 @@ import org.springframework.batch.core.configuration.support.DefaultBatchConfigur
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.builder.TaskletStepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 
 @Slf4j // log 사용을 위한 lombok 어노테이션
@@ -34,61 +39,27 @@ public class TestJobConfiguration extends DefaultBatchConfiguration {
 
     private int chunkSize = 1;
 
+    private PriorityQueue<User> sortedUserRank = new PriorityQueue<>(Comparator.comparing(User::getAverageScore));
+
     @Bean
-    public Job userPassDecisionJob(JobRepository jobRepository, EntityManagerFactory entityManagerFactory) {
-        return new JobBuilder("userPassDecisionJob", jobRepository)
-                .start(UserRankStep())
-                .next(UserRankStep())
+    public Step testStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, @Value("#{jobParameters[limit]}")Long limit) {
+        log.warn("This is form testStep");
+        return new StepBuilder("testJob", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    log.warn(">>>>> This is Step1");
+                    return RepeatStatus.FINISHED;
+                })
                 .build();
     }
 
     @Bean
-    @JobScope
-    public Step userRankstep(JobRepository jobRepository, EntityManagerFactory entityManagerFactory, @Value("#{jobParameters['count']}") Long limit) {
-        return new StepBuilder("userRankingStep", jobRepository)
-                .<User, User>chunk(chunkSize)
-                .reader(UserRankReader(entityManagerFactory))
-                .writer(UserRankWriter())
+    public Job testJob(JobRepository jobRepository, JobExecutionListener listener, Step testStep) {
+        log.warn("This is form testJob");
+        return new JobBuilder("testJob", jobRepository)
+                .listener(listener)
+                .flow(testStep)
+                .end()
                 .build();
     }
 
-    @Bean
-    public JpaPagingItemReader<User> userRankReader(EntityManagerFactory entityManagerFactory) {
-        return new JpaPagingItemReaderBuilder<User>()
-                .name("jpaPagingItemReader")
-                .entityManagerFactory(entityManagerFactory)
-                .pageSize(chunkSize)
-                .queryString("SELECT p FROM User ORDER BY id")
-                .build();
-    }
-
-    @Bean
-    public ItemWriter<User> userRankWriter() {
-        return null;
-    }
-
-    @Bean
-    @JobScope
-    public Step userPassByRankStep(JobRepository jobRepository, EntityManagerFactory entityManagerFactory, @Value("#{jobParameters['count']}") Long limit) {
-        return new StepBuilder("userRankingStep", jobRepository)
-                .<User, User>chunk(chunkSize)
-                .reader(UserPassByRankReader(entityManagerFactory))
-                .writer(UserPassByRankWriter())
-                .build();
-    }
-
-    @Bean
-    public JpaPagingItemReader<User> userPassByRankReader(EntityManagerFactory entityManagerFactory) {
-        return new JpaPagingItemReaderBuilder<User>()
-                .name("jpaPagingItemReader")
-                .entityManagerFactory(entityManagerFactory)
-                .pageSize(chunkSize)
-                .queryString("SELECT p FROM User ORDER BY id")
-                .build();
-    }
-
-    @Bean
-    public ItemWriter<User> userPassByRankWriter() {
-        return null;
-    }
 }
