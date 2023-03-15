@@ -12,7 +12,10 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
+import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
+import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,11 +32,11 @@ public class BatchConfiguration {
 
     private TesterService testerService;
 
-    private TesterRepository userRepository;
+    private TesterRepository testerRepository;
 
-    public BatchConfiguration(TesterService testerService, TesterRepository userRepository) {
+    public BatchConfiguration(TesterService testerService, TesterRepository testerRepository) {
         this.testerService = testerService;
-        this.userRepository = userRepository;
+        this.testerRepository = testerRepository;
     }
 
 
@@ -43,7 +46,7 @@ public class BatchConfiguration {
         return new JobBuilder("importUserJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(step1)
-                .next(step2(jobRepository, userRepository, platformTransactionManager))
+                .next(step2(jobRepository, testerRepository, platformTransactionManager))
                 .build();
     }
 
@@ -60,28 +63,31 @@ public class BatchConfiguration {
 
     @Bean
     public Step step2(JobRepository jobRepository,
-                      TesterRepository userRepository, PlatformTransactionManager platformTransactionManager) {
+                      TesterRepository testerRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("step1", jobRepository)
                 .<Tester, Tester>chunk(chunkSize)
-                .reader(testReader(userRepository))
-                .writer(testWriter())
+                .reader(testReader(testerRepository))
+                .writer(testWriter(testerRepository))
                 .transactionManager(platformTransactionManager)
                 .build();
     }
 
     @Bean
-    public RepositoryItemReader<Tester> testReader(TesterRepository userRepository) {
+    public RepositoryItemReader<Tester> testReader(TesterRepository testerRepository) {
+        log.warn(">>>>> This is testReader");
         return new RepositoryItemReaderBuilder<Tester>()
                 .name("testReader")
-                .repository(userRepository)
+                .repository(testerRepository)
                 .methodName("findAll")
                 .sorts(Map.of("id", Sort.Direction.ASC))
                 .build();
     }
 
     @Bean
-    public ItemWriter testWriter() {
+    public ItemWriter testWriter(TesterRepository testerRepository) {
         log.warn(">>>>> This is testWriter");
-        return new CustomItemWriter();
+        return new RepositoryItemWriterBuilder<Tester>()
+                .repository(testerRepository)
+                .build();
     }
 }

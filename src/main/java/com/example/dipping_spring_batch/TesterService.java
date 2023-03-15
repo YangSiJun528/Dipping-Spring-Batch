@@ -84,6 +84,8 @@ public class TesterService {
                 .value(40L)
                 .build();
 
+        scoreRepository.saveAll(List.of(score31, score32, score33));
+
         Tester tester3 = Tester.builder()
                 .id(3L)
                 .passed(false)
