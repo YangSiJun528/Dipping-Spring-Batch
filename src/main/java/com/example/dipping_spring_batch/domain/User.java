@@ -10,19 +10,19 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "`user`")
+@Table(name = "`user1`")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
     @Id
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user1_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "user_name", nullable = false)
+    @Column(name = "user1_name", nullable = false)
     String name;
 
-    @Column(name = "user_passed", nullable = true)
+    @Column(name = "user1_passed", nullable = false)
     Boolean passed;
 
     // scores는 연관관계의 주인(Score)의 user 필드에 해당한다.

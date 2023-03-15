@@ -21,7 +21,7 @@ public class Score {
     Long value;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user1_id", nullable = false)
     private User user;
 
 }
