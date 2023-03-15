@@ -10,25 +10,26 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "`user1`")
+@Builder
+@Table(name = "tester")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class Tester {
     @Id
-    @Column(name = "user1_id", nullable = false)
+    @Column(name = "tester_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "user1_name", nullable = false)
+    @Column(name = "tester_name", nullable = false)
     String name;
 
-    @Column(name = "user1_passed", nullable = false)
+    @Column(name = "tester_passed", nullable = false)
     Boolean passed;
 
     // scores는 연관관계의 주인(Score)의 user 필드에 해당한다.
     // cascade = ALL과 orphanRemoval = true 을 사용해 자식 엔티티의 생명주기를 관리한다.
-    @OneToMany(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL)
-    List<Score> scores = new ArrayList<Score>();
+    @OneToMany(fetch = FetchType.LAZY)
+    List<Score> scores = new ArrayList<>();
 
     public BigDecimal getAverageScore() {
         BigDecimal result = getScores().stream().map(score -> score.getValue()).map(BigDecimal::valueOf)

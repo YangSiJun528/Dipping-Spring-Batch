@@ -1,8 +1,8 @@
 package com.example.dipping_spring_batch.job;
 
-import com.example.dipping_spring_batch.domain.User;
-import com.example.dipping_spring_batch.repository.UserRepository;
-import jakarta.persistence.EntityManager;
+import com.example.dipping_spring_batch.TesterService;
+import com.example.dipping_spring_batch.domain.Tester;
+import com.example.dipping_spring_batch.repository.TesterRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -17,11 +17,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionManager;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -30,16 +27,19 @@ public class BatchConfiguration {
 
     private int chunkSize = 1;
 
-    private UserRepository userRepository;
+    private TesterService testerService;
 
-    private CustomItemWriter customItemWriter;
+    private TesterRepository userRepository;
 
-    public BatchConfiguration(UserRepository userRepository) {
+    public BatchConfiguration(TesterService testerService, TesterRepository userRepository) {
+        this.testerService = testerService;
         this.userRepository = userRepository;
     }
 
+
     @Bean
     public Job importUserJob(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, Step step1) {
+        testerService.init();
         return new JobBuilder("importUserJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(step1)
@@ -60,9 +60,9 @@ public class BatchConfiguration {
 
     @Bean
     public Step step2(JobRepository jobRepository,
-                      UserRepository userRepository, PlatformTransactionManager platformTransactionManager) {
+                      TesterRepository userRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("step1", jobRepository)
-                .<User, User>chunk(chunkSize)
+                .<Tester, Tester>chunk(chunkSize)
                 .reader(testReader(userRepository))
                 .writer(testWriter())
                 .transactionManager(platformTransactionManager)
@@ -70,8 +70,8 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public RepositoryItemReader<User> testReader(UserRepository userRepository) {
-        return new RepositoryItemReaderBuilder<User>()
+    public RepositoryItemReader<Tester> testReader(TesterRepository userRepository) {
+        return new RepositoryItemReaderBuilder<Tester>()
                 .name("testReader")
                 .repository(userRepository)
                 .methodName("findAll")

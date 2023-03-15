@@ -1,14 +1,12 @@
 package com.example.dipping_spring_batch.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
-@Table(name = "`score`")
+@Builder
+@Table(name = "score")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Score {
@@ -19,9 +17,5 @@ public class Score {
 
     @Column(name = "score_value", nullable = false)
     Long value;
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user1_id", nullable = false)
-    private User user;
 
 }
