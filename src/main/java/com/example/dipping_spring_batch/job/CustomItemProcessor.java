@@ -8,6 +8,7 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.PriorityQueue;
 
 @Component
@@ -23,12 +24,12 @@ public class CustomItemProcessor implements ItemProcessor<Tester, Tester> {
     @Override
     public Tester process(Tester tester) throws Exception {
         ExecutionContext jobContext = jobExecution.getExecutionContext();
-        PriorityQueue<Tester> ranks = (PriorityQueue<Tester>) jobContext.get("ranks");
+        PriorityQueue<Map<Long,Tester>> ranks = (PriorityQueue<Map<Long, Tester>>) jobContext.get("ranks");
         if (ranks == null) {
             ranks = new PriorityQueue<>();
             jobContext.put("ranks", ranks);
         }
-        ranks.add(tester);
+        ranks.add(Map.of(tester.getId(), tester));
         return tester;
     }
 }

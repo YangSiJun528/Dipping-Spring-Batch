@@ -31,6 +31,8 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import static org.springframework.boot.context.properties.bind.Bindable.mapOf;
+
 @Slf4j
 @Configuration
 public class BatchConfiguration {
@@ -51,6 +53,7 @@ public class BatchConfiguration {
         this.rankingRepository = rankingRepository;
     }
 
+    //PriorityQueue 이거 사용하는게 맞나? 그냥 ArrayList 사용해서 하는게 더 나을듯?
 
     @Bean
     public Job importUserJob(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, Step step1, Step step2, Step step3) {
@@ -78,9 +81,17 @@ public class BatchConfiguration {
         public Step step2(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
             return new StepBuilder("step2", jobRepository)
                     .<Tester, Tester>chunk(chunkSize)
-                    .reader(new CustomItemReader())
+                    .reader(new RepositoryItemReaderBuilder<Tester>()
+                            .repository(testerRepository)
+                            .methodName("findAll")
+                            .sorts(Map.of("id", Sort.Direction.ASC))
+                            .pageSize(chunkSize)
+                            .build())
                     .processor(new CustomItemProcessor())
-                    .writer(new CustomItemWriter())
+                    .writer(new RepositoryItemWriterBuilder<Tester>()
+                            .repository(testerRepository)
+                            .methodName("save")
+                            .build())
                     .transactionManager(platformTransactionManager)
                     .build();
     }
@@ -92,6 +103,10 @@ public class BatchConfiguration {
                         ExecutionContext executionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
                         int number = (int) executionContext.get("number");
                         log.warn("Number from Step ExecutionContext: " + number);
+                        PriorityQueue<Map<Long,Tester>> ranks = (PriorityQueue<Map<Long, Tester>>) executionContext.get("ranks");
+                        ranks.forEach((rank)->{
+                            ranks.poll();
+                        });
                         return RepeatStatus.FINISHED;
                     }, platformTransactionManager)
                     .build();
