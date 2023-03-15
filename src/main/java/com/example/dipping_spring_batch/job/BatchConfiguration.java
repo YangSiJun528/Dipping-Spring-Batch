@@ -10,6 +10,7 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemProcessor;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionManager;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -57,79 +59,39 @@ public class BatchConfiguration {
                 .incrementer(new RunIdIncrementer())
                 .start(step1)
                 .next(step2)
-                .start(step3)
+                .next(step3)
                 .build();
     }
 
     @Bean
-    public Step step1(JobRepository jobRepository,
-                      PlatformTransactionManager transactionManager) {
+    public Step step1(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("step1", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    log.warn(">>>>> This is Step1");
+                    // Step ExecutionContext에 데이터 저장
+                    ExecutionContext jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
+                    jobExecution.put("number", 10);
                     return RepeatStatus.FINISHED;
-                }, transactionManager)
-                .listener(new StepExecutionListener() { // Job ExecutionContext 나중에 더 올바른 위치로 옮겨야함
-                    @Override
-                    public void beforeStep(StepExecution stepExecution) {
-                        ExecutionContext jobContext = stepExecution.getJobExecution().getExecutionContext();
-                        jobContext.put("ranks", usersRankedQueue);
-                        return;
-                    }
-                })
+                }, platformTransactionManager)
                 .build();
     }
-
-    @Bean
-    public Step step2(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
-        return new StepBuilder("step2", jobRepository)
-                .<Tester, Tester>chunk(chunkSize)
-                .reader(testReader(testerRepository))
-                .processor(new ItemProcessor<Tester, Tester>() {
-                    @Override
-                    public Tester process(Tester item) throws Exception {
-                        return item;
-                    }
-                })
-                .writer(testWriter(rankingRepository))
-                .transactionManager(platformTransactionManager)
-                .build();
+        @Bean
+        public Step step2(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
+            return new StepBuilder("step2", jobRepository)
+                    .tasklet((contribution, chunkContext) -> {
+                        // Step ExecutionContext에서 데이터 가져오기
+                        ExecutionContext executionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
+                        int number = (int) executionContext.get("number");
+                        log.warn("Number from Step ExecutionContext: " + number);
+                        return RepeatStatus.FINISHED;
+                    }, platformTransactionManager)
+                    .build();
     }
-
-    @Bean
-    public RepositoryItemReader<Tester> testReader(TesterRepository testerRepository) {
-        log.warn(">>>>> This is testReader");
-        return new RepositoryItemReaderBuilder<Tester>()
-                .name("testReader")
-                .repository(testerRepository)
-                .methodName("findAll")
-                .sorts(Map.of("id", Sort.Direction.ASC))
-                .build();
+        @Bean
+        public Step step3(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
+            return new StepBuilder("step3", jobRepository)
+                    .tasklet((contribution, chunkContext) -> {
+                        return RepeatStatus.FINISHED;
+                    }, platformTransactionManager)
+                    .build();
     }
-
-    @Bean
-    public ItemWriter testWriter(RankingRepository rankingRepository) {
-        log.warn(">>>>> This is testWriter");
-        return new RepositoryItemWriterBuilder<Ranking>()
-                .repository(rankingRepository)
-                .build();
-    }
-
-    @Bean
-    public Step step3(JobRepository jobRepository,
-                      PlatformTransactionManager transactionManager) {
-        return new StepBuilder("step3", jobRepository)
-                .tasklet((contribution, chunkContext) -> {
-                    log.warn(">>>>> This is Step3");
-                    ExecutionContext jobContext = chunkContext.getStepContext().getStepExecution()
-                            .getJobExecution().getExecutionContext();
-                    PriorityQueue ranks = (PriorityQueue) jobContext.get("ranks");
-                    ranks.forEach((rank)->{
-                        log.warn(rank.toString());
-                    });
-                    return RepeatStatus.FINISHED;
-                }, transactionManager)
-                .build();
-    }
-
 }
