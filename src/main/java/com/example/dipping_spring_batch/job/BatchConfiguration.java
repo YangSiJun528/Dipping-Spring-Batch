@@ -77,19 +77,21 @@ public class BatchConfiguration {
         @Bean
         public Step step2(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
             return new StepBuilder("step2", jobRepository)
-                    .tasklet((contribution, chunkContext) -> {
-                        // Step ExecutionContext에서 데이터 가져오기
-                        ExecutionContext executionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
-                        int number = (int) executionContext.get("number");
-                        log.warn("Number from Step ExecutionContext: " + number);
-                        return RepeatStatus.FINISHED;
-                    }, platformTransactionManager)
+                    .<Tester, Tester>chunk(chunkSize)
+                    .reader(new CustomItemReader())
+                    .processor(new CustomItemProcessor())
+                    .writer(new CustomItemWriter())
+                    .transactionManager(platformTransactionManager)
                     .build();
     }
         @Bean
         public Step step3(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
             return new StepBuilder("step3", jobRepository)
                     .tasklet((contribution, chunkContext) -> {
+                        // Step ExecutionContext에서 데이터 가져오기
+                        ExecutionContext executionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
+                        int number = (int) executionContext.get("number");
+                        log.warn("Number from Step ExecutionContext: " + number);
                         return RepeatStatus.FINISHED;
                     }, platformTransactionManager)
                     .build();
