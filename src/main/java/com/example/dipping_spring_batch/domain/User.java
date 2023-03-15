@@ -1,4 +1,4 @@
-package com.example.dipping_spring_batch.test.domain;
+package com.example.dipping_spring_batch.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,5 +34,16 @@ public class User {
         BigDecimal result = getScores().stream().map(score -> score.getValue()).map(BigDecimal::valueOf)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return result.divide(BigDecimal.valueOf(scores.size()), 3, RoundingMode.HALF_UP);
+    }
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", passed=" + passed +
+                ", scores=" + scores +
+                '}';
     }
 }

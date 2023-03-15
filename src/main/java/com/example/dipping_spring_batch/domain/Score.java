@@ -1,4 +1,4 @@
-package com.example.dipping_spring_batch.test.domain;
+package com.example.dipping_spring_batch.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
