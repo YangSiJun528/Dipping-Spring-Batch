@@ -39,11 +39,11 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job importUserJob(JobRepository jobRepository, EntityManager entityManager, Step step1) {
+    public Job importUserJob(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, Step step1) {
         return new JobBuilder("importUserJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(step1)
-//                .next(step2(jobRepository, userRepository))
+                .next(step2(jobRepository, userRepository, platformTransactionManager))
                 .build();
     }
 
@@ -52,7 +52,7 @@ public class BatchConfiguration {
                       PlatformTransactionManager transactionManager) {
         return new StepBuilder("step1", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    log.info(">>>>> This is Step1");
+                    log.warn(">>>>> This is Step1");
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
                 .build();
@@ -60,32 +60,28 @@ public class BatchConfiguration {
 
     @Bean
     public Step step2(JobRepository jobRepository,
-                      UserRepository userRepository, TransactionManager transactionManager) {
+                      UserRepository userRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("step1", jobRepository)
                 .<User, User>chunk(chunkSize)
                 .reader(testReader(userRepository))
                 .writer(testWriter())
+                .transactionManager(platformTransactionManager)
                 .build();
     }
 
     @Bean
     public RepositoryItemReader<User> testReader(UserRepository userRepository) {
-        Map sorts = new HashMap<>();
-        sorts.put("id", Sort.Direction.ASC);
         return new RepositoryItemReaderBuilder<User>()
                 .name("testReader")
                 .repository(userRepository)
-                .pageSize(chunkSize)
                 .methodName("findAll")
-//                .sorts(new HashMap<>(){{
-//                    put("user_id",Sort.Direction.ASC);
-//                }})
-                .sorts(sorts)
+                .sorts(Map.of("id", Sort.Direction.ASC))
                 .build();
     }
 
     @Bean
     public ItemWriter testWriter() {
+        log.warn(">>>>> This is testWriter");
         return new CustomItemWriter();
     }
 }
