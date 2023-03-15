@@ -1,5 +1,6 @@
 package com.example.dipping_spring_batch;
 
+import com.example.dipping_spring_batch.domain.User;
 import com.example.dipping_spring_batch.repository.UserRepository;
 
 public class TestService {
@@ -9,5 +10,6 @@ public class TestService {
         this.userRepository = userRepository;
     }
 
+//    private User user1 = new User()
 
 }
