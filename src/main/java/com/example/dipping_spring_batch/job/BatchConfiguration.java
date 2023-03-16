@@ -43,20 +43,6 @@ public class BatchConfiguration {
 
     private int chunkSize = 1;
 
-    private PriorityQueue<Tester> usersRankedQueue = new PriorityQueue<>(Comparator.comparing(Tester::getAverageScore));
-
-    private TesterService testerService;
-
-    private TesterRepository testerRepository;
-
-    private RankingRepository rankingRepository;
-
-    public BatchConfiguration(TesterService testerService, TesterRepository testerRepository, RankingRepository rankingRepository) {
-        this.testerService = testerService;
-        this.testerRepository = testerRepository;
-        this.rankingRepository = rankingRepository;
-    }
-
     @Bean
     public Job jobParameterJob(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, Step step1) {
         return new JobBuilder("jobParameterJob", jobRepository)
@@ -73,11 +59,9 @@ public class BatchConfiguration {
     }
 
     @Bean
-    @StepScope
-    public Tasklet testTasklet(PlatformTransactionManager platformTransactionManager, @Value("#{jobParameters[param1]}") String param) {
+    public Tasklet testTasklet(PlatformTransactionManager platformTransactionManager) {
         return (stepContribution, chunkContext) -> {
             log.warn(">>>>>>tasklet");
-            log.warn(param);
             return RepeatStatus.FINISHED;
         };
     }
