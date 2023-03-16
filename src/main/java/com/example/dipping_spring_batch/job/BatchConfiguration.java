@@ -81,6 +81,7 @@ public class BatchConfiguration {
         public Step step2(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
             return new StepBuilder("step2", jobRepository)
                     .<Tester, Tester>chunk(chunkSize)
+                    .listener(new CustomItemProcessor())
                     .reader(new RepositoryItemReaderBuilder<Tester>()
                             .repository(testerRepository)
                             .methodName("findAll")
